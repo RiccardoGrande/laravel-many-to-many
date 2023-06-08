@@ -37,7 +37,16 @@ class CategoryController extends Controller
      */
     public function store(StoreCategoryRequest $request)
     {
-        //
+        //dd($request->all());
+
+        $val_data = $request->validated();
+
+        $slug = Str::slug($request->name);
+        //dd($slug);
+        $val_data['slug'] = $slug;
+
+        Category::create($val_data);
+        return to_route('admin.categories.index')->with('message', 'Category created successfully');
     }
 
     /**
@@ -82,6 +91,7 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        //
+        $category->delete();
+        return to_route('admin.categories.index')->with('message', 'Category deleted successfully');
     }
 }

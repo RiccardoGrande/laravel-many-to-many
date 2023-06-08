@@ -7,6 +7,7 @@ use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Category;
 use App\Models\Project;
+use App\Models\Technology;
 
 class ProjectController extends Controller
 {
@@ -31,7 +32,9 @@ class ProjectController extends Controller
     {
         $categories = Category::orderByDesc('id')->get();
 
-        return view('admin.projects.create', compact('categories'));
+        $technologies = Technology::orderByDesc('id')->get();
+
+        return view('admin.projects.create', compact('categories', 'technologies'));
     }
 
     /**
@@ -42,7 +45,27 @@ class ProjectController extends Controller
      */
     public function store(StoreProjectRequest $request)
     {
-        //
+        //dd($request->all());
+        // validate the request
+        $val_data = $request->validated();
+        //dd($val_data);
+
+        // generate the title slug
+        $slug = Project::generateSlug($val_data['title']);
+        //dd($slug);
+        $val_data['slug'] = $slug;
+        //dd($val_data);
+
+        // Create the new Post
+        $new_project = Post::create($val_data);
+
+        // Attach the checked tags
+        if ($request->has('technologies')) {
+            $new_project->technologies()->attach($request->technologies);
+        }
+
+        // redirect back
+        return to_route('admin.projects.index')->with('message', 'Project Created Successfully');
     }
 
     /**
@@ -53,7 +76,7 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        //
+        return view('admin.projects.show', compact('project'));
     }
 
     /**
@@ -64,7 +87,10 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
-        //
+        $categories = Category::orderByDesc('id')->get();
+        $technologies = Technology::orderByDesc('id')->get();
+
+        return view('admin.projects.edit', compact('project', 'categories', 'technologies'));
     }
 
     /**
@@ -76,7 +102,29 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project)
     {
-        //
+
+        $val_data = $request->validated();
+        //dd($val_data);
+
+        /* TODO:
+        What happens if i update the post title ?
+         */
+        // Checks if the request has a key called title
+        //dd($request->has('title'));
+
+        // generate the title slug
+        $slug = Project::generateSlug($val_data['title']);
+        //dd($slug);
+        $val_data['slug'] = $slug;
+        //dd($val_data);
+
+        $post->update($val_data);
+
+        if ($request->has('technologies')) {
+            $project->technologies()->sync($request->technologies);
+        }
+
+        return to_route('admin.projects.index')->with('message', 'Project: ' . $project->title . 'Updated');
     }
 
     /**
@@ -87,6 +135,7 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
-        //
+        $project->delete();
+        return to_route('admin.projects.index')->with('message', 'Project: ' . $project->title . 'Deleted');
     }
 }
