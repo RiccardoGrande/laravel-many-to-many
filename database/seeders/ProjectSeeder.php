@@ -22,7 +22,7 @@ class ProjectSeeder extends Seeder
             $project->title = $faker->sentence(3);
             $project->slug = Str::slug($project->title, '-'); // 👈  Use me to generate a slug
             $project->content = $faker->paragraphs(asText:true);
-            $project->url_project = $faker->imageUrl($width = 640, $height = 480, 'cats', true, 'Faker');
+            $project->url_project = 'placeholders/' . $faker->image('storage/app/public/placeholders/', fullPath:false, category:'Posts', format:'jpg', word:$post->title, gray:true);
             $project->save();
         }
     }

@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Category;
 use App\Models\Project;
 use App\Models\Technology;
+use Illuminate\Support\Facades\Storage;
 
 class ProjectController extends Controller
 {
@@ -66,6 +67,12 @@ class ProjectController extends Controller
 
         // redirect back
         return to_route('admin.projects.index')->with('message', 'Project Created Successfully');
+
+        if ($request->hasFile('cover_image')) {
+            $image_path = Storage::put('uploads', $request->cover_image);
+            //dd($image_path);
+            $val_data['cover_image'] = $image_path;
+        }
     }
 
     /**
@@ -124,6 +131,22 @@ class ProjectController extends Controller
             $project->technologies()->sync($request->technologies);
         }
 
+        if ($request->hasFile('cover_image')) {
+            //dd('here');
+
+            //if post->cover_image
+            // delete the previous image
+
+            if ($project->cover_image) {
+                Storage::delete($project->cover_image);
+            }
+
+            // Save the file in the storage and get its path
+            $image_path = Storage::put('uploads', $request->cover_image);
+            //dd($image_path);
+            $val_data['cover_image'] = $image_path;
+        }
+
         return to_route('admin.projects.index')->with('message', 'Project: ' . $project->title . 'Updated');
     }
 
@@ -135,6 +158,10 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
+        if ($project->cover_image) {
+            Storage::delete($project->cover_image);
+        }
+
         $project->delete();
         return to_route('admin.projects.index')->with('message', 'Project: ' . $project->title . 'Deleted');
     }
